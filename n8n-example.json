@@ -1,0 +1,94 @@
+{
+  "name": "Sentinel Credit Score API",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "manual-trigger",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "username",
+              "value": "74096313"
+            },
+            {
+              "name": "password",
+              "value": "Chalaca17*"
+            }
+          ]
+        }
+      },
+      "id": "set-credentials",
+      "name": "Set Credentials",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://TU_IP_VPS:3000/api/credit-score",
+        "authentication": "none",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": []
+        },
+        "specifyBody": "json",
+        "jsonBody": "{\n  \"username\": \"{{ $json.username }}\",\n  \"password\": \"{{ $json.password }}\"\n}",
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "id": "http-request",
+      "name": "HTTP Request to API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [650, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Procesar respuesta de la API\nconst response = $input.item.json;\n\nif (response.success) {\n  return {\n    json: {\n      score: response.score,\n      nombre: response.name,\n      usuario: response.username,\n      mensaje: `Score crediticio: ${response.score} para ${response.name}`,\n      timestamp: new Date().toISOString()\n    }\n  };\n} else {\n  throw new Error(`Error al obtener score: ${response.error}`);\n}"
+      },
+      "id": "process-response",
+      "name": "Process Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [850, 300]
+    }
+  ],
+  "connections": {
+    "Manual Trigger": {
+      "main": [[{ "node": "Set Credentials", "type": "main", "index": 0 }]]
+    },
+    "Set Credentials": {
+      "main": [[{ "node": "HTTP Request to API", "type": "main", "index": 0 }]]
+    },
+    "HTTP Request to API": {
+      "main": [[{ "node": "Process Response", "type": "main", "index": 0 }]]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 0,
+  "updatedAt": "2026-02-13T00:00:00.000Z",
+  "versionId": "1"
+}
